@@ -23,10 +23,12 @@ import time
 import sys
 import httplib, urllib
 import json
-
+import RPi.GPIO as GPIO
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(24, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 import Adafruit_DHT
-deviceId = "DvTOGHDE"
-deviceKey = "thZvYPgWrYmomI3z"
+deviceId = "DmEE8Rt4"
+deviceKey = "wFwSKasMAy4zqVBB"
 
 def post_to_mcs(payload):
 	headers = {"Content-type": "application/json", "deviceKey": deviceKey}
@@ -62,12 +64,19 @@ else:
 # Try to grab a sensor reading.  Use the read_retry method which will retry up
 # to 15 times to get a sensor reading (waiting 2 seconds between each retry).
 while True:
-
+	SwitchStatus = GPIO.input(24)
+	if( SwitchStatus == 0):
+		print('Butten pressed')
+	else:
+		print('Butten released')
 	h0, t0= Adafruit_DHT.read_retry(sensor, pin)
 	if h0 is not None and t0 is not None:
 		print('Temp={0:0.1f}*  Humidity={1:0.1f}%'.format(t0, h0))
 
-		payload = {"datapoints":[{"dataChnId":"Humidity","values":{"value":h0}},{"dataChnId":"Temperature","values":{"value":t0}}]}
+		payload = {"datapoints":[
+			  {"dataChnId":"Humidity","values":{"value":h0}},
+			  {"dataChnId":"Temperature","values":{"value":t0}},
+			  {"dataChnId":"SwitchStatus","values":{"value":SwitchStatus}}]}
 		post_to_mcs(payload)
 		time.sleep(10)
 
